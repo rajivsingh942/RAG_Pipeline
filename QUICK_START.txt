@@ -1,0 +1,60 @@
+═══════════════════════════════════════════════════════════════════════════════
+                          SMART RAG - QUICK START
+═══════════════════════════════════════════════════════════════════════════════
+
+👉 FASTEST WAY TO GET STARTED:
+
+    1. Double-click: SETUP.bat             (wait 2-5 minutes, happens once)
+    2. Double-click: START_ALL_WEB.bat      (wait 15 seconds, happens every time)
+    3. Start uploading documents and asking questions!
+
+That's it! ✨
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 WHAT EACH FILE DOES:
+
+┌─ SETUP.bat
+│  • Installs Python packages (one time only!)
+│  • Creates virtual environment
+│  • Takes 2-5 minutes
+│  • You'll never need to run this again
+│  • (Unless you get an error, then run TROUBLESHOOT.bat)
+│
+├─ START_ALL_WEB.bat  
+│  • Starts backend and frontend servers
+│  • Opens browser automatically
+│  • Run this every time you want to use the app
+│
+├─ FIRST_TIME.txt
+│  • Detailed setup guide
+│  • Read if you're completely new
+│
+├─ USER_GUIDE.md
+│  • How to use the app
+│  • Tips and tricks
+│
+├─ TROUBLESHOOT.bat
+│  • Fix problems
+│  • Reset virtual environment
+│  • Check system status
+│
+└─ RECOVER.bat
+   • Complete reset (only if seriously broken)
+   • Deletes all data and starts fresh
+
+═══════════════════════════════════════════════════════════════════════════════
+
+⚠️  IMPORTANT NOTES:
+
+✓ Keep terminal windows open while using the app
+✓ Works fine after computer restart
+✓ All your documents stay on your computer (private!)
+✓ Database is saved automatically
+✓ You can interrupt and restart anytime
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 Ready? Run SETUP.bat now!
+
+═══════════════════════════════════════════════════════════════════════════════

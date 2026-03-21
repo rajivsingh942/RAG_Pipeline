@@ -1,0 +1,96 @@
+# ============================================================================
+# DOCKER IGNORE - Files to exclude from Docker build
+# ============================================================================
+# These files will NOT be copied into the Docker image
+# Reduces image size dramatically
+# ============================================================================
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.sublime-workspace
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.tox/
+
+# Version Control
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# CI/CD
+.gitlab-ci.yml
+.circleci/
+.travis.yml
+Jenkinsfile
+
+# OS / System
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# Environment Files (use .env.example instead)
+.env
+.env.local
+.env.*.local
+
+# Data folders (created at runtime)
+backend/data/
+DataSource/
+uploads/
+logs/
+
+# Test/Documentation files (optional)
+README.md (optional, depends on need)
+*.md (optional - include only essential docs)
+
+# Package managers lock files (optional)
+package-lock.json (if using Node)
+
+# ============================================================================
+# KEEP THESE IN DOCKER:
+# - All Python source code (backend/, frontend/)
+# - requirements.txt
+# - Dockerfile
+# - Essential configuration files
+# - Documentation
+# ============================================================================

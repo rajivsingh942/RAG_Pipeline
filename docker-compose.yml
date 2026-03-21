@@ -1,0 +1,114 @@
+# ============================================================================
+# DOCKER COMPOSE - Local Testing of Smart RAG Project
+# ============================================================================
+# Use this to test your Docker setup locally
+# Command: docker-compose up
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # BACKEND API SERVICE
+  # ============================================================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smart-rag-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - LLM_PROVIDER=openai
+      - LLM_MODEL=gpt-4o-mini
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - DATABASE_PATH=/app/backend/data/rag_pipeline.db
+      - VECTOR_STORE_PATH=/app/backend/data/faiss_index
+    volumes:
+      # Persist data folder between container runs
+      - rag_data:/app/backend/data
+    working_dir: /app/backend
+    command: python run.py
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - rag_network
+
+  # ============================================================================
+  # FRONTEND SERVICE
+  # ============================================================================
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smart-rag-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - FRONTEND_PORT=3000
+      - API_HOST=http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    working_dir: /app
+    command: python frontend_server.py
+    networks:
+      - rag_network
+
+# ============================================================================
+# VOLUMES (Persistent Storage)
+# ============================================================================
+volumes:
+  rag_data:
+    driver: local
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+networks:
+  rag_network:
+    driver: bridge
+
+# ============================================================================
+# USAGE
+# ============================================================================
+# 
+# 1. Create .env file with your API keys:
+#    cp .env.example .env
+#    # Edit .env with your actual API keys
+#
+# 2. Start the services:
+#    docker-compose up -d
+#
+# 3. Access the application:
+#    Frontend: http://localhost:3000
+#    Backend API: http://localhost:8000
+#
+# 4. Stop the services:
+#    docker-compose down
+#
+# 5. View logs:
+#    docker-compose logs -f
+#
+# 6. Remove everything (including data):
+#    docker-compose down -v
+#
+# ============================================================================
+# NOTES
+# ============================================================================
+#
+# - Data persists in 'rag_data' volume
+# - The backend waits for healthy backend before starting frontend
+# - Set API_HOST environment variable if backend is on different server
+# - For production: use separate docker-compose files per environment
+# - For cloud deployment: use cloud-specific compose alternatives
+#
+# ============================================================================
