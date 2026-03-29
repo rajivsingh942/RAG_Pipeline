@@ -29,6 +29,7 @@ COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 COPY .env.example ./.env
 COPY requirements.txt ./
+COPY app_runner.py ./
 COPY frontend_server.py ./
 COPY start_render.py ./
 COPY README.md ./
@@ -69,8 +70,8 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
 # ============================================================================
 # RUN COMMAND
 # ============================================================================
-# Run FastAPI directly with uvicorn - use shell form for environment variable expansion
-CMD sh -c "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}"
+# Run app with proper error handling and logging via app_runner.py
+CMD ["python", "app_runner.py"]
 
 # ============================================================================
 # NOTES FOR CLOUD DEPLOYMENT

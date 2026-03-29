@@ -63,49 +63,10 @@ async def health_check():
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize on startup - with error handling"""
-    global rag_pipeline, vector_store, active_llm
-    
-    try:
-        # Initialize database
-        await database.init_db()
-        logger.info("✅ Database initialized")
-    except Exception as e:
-        logger.warning(f"⚠️  Database initialization failed (non-critical): {e}")
-    
-    try:
-        # Initialize vector store
-        vector_store = VectorStore(settings.VECTOR_STORE_PATH)
-        logger.info("✅ Vector store initialized")
-    except Exception as e:
-        logger.warning(f"⚠️  Vector store initialization failed (non-critical): {e}")
-    
-    try:
-        # Initialize LLM - check if API key exists first
-        api_key = getattr(settings, f"{settings.DEFAULT_LLM.upper()}_API_KEY", "")
-        if not api_key or api_key == "":
-            logger.warning(f"⚠️  No API key for {settings.DEFAULT_LLM} - API endpoints will fail until configured")
-        else:
-            active_llm = get_llm(
-                settings.DEFAULT_LLM,
-                api_key,
-                getattr(settings, f"{settings.DEFAULT_LLM.upper()}_MODEL"),
-            )
-            logger.info(f"✅ LLM initialized: {settings.DEFAULT_LLM}")
-    except Exception as e:
-        logger.warning(f"⚠️  LLM initialization failed (non-critical): {e}")
-    
-    try:
-        # Initialize RAG pipeline
-        if vector_store and active_llm:
-            rag_pipeline = RAGPipeline(active_llm, vector_store)
-            logger.info("✅ RAG pipeline initialized")
-        else:
-            logger.warning("⚠️  RAG pipeline not initialized - vector store or LLM missing")
-    except Exception as e:
-        logger.warning(f"⚠️  RAG pipeline initialization failed (non-critical): {e}")
-    
-    logger.info("✅ Application startup complete")
+    """Startup event - minimal initialization"""
+    logger.info("✅ Application starting - heavy components will load on first use")
+    # Note: Don't initialize heavy components here (sentence-transformers, etc.)
+    # They will be loaded lazily when first needed
 
 
 # ==================== Data Source Endpoints ====================
