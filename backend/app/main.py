@@ -86,16 +86,7 @@ def _get_rag_pipeline():
         raise
 
 
-# Health check endpoint
-@app.get("/health")
-async def health_check():
-    """Health check endpoint for monitoring"""
-    return {
-        "status": "ok",
-        "service": "Smart RAG Pipeline",
-        "version": "1.0.0",
-        "rag_ready": rag_pipeline is not None,
-    }
+# Health check endpoint - Consolidated at end of file
 
 
 @app.on_event("startup")
@@ -421,11 +412,13 @@ else:
 
 @app.get("/health")
 async def health_check():
-    """Health check"""
+    """Health check endpoint for monitoring"""
     return {
         "status": "ok",
-        "rag_pipeline": rag_pipeline is not None,
-        "vector_store": vector_store is not None,
+        "service": "Smart RAG Pipeline",
+        "version": "1.0.0",
+        "rag_ready": rag_pipeline is not None,
+        "vector_store_ready": vector_store is not None,
     }
 
 
@@ -433,6 +426,10 @@ async def health_check():
 async def get_stats():
     """Get system statistics"""
     try:
+        # Check if components are initialized
+        if vector_store is None:
+            raise HTTPException(status_code=503, detail="Vector store not initialized. Make a query first.")
+        
         vector_stats = await vector_store.get_stats()
         
         return {
