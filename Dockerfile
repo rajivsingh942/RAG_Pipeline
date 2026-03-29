@@ -46,6 +46,13 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
 RUN mkdir -p backend/data
 
 # ============================================================================
+# SET PYTHON PATH AND ENVIRONMENT
+# ============================================================================
+# Add backend to Python path so 'app' module can be found
+ENV PYTHONPATH=/app/backend:$PYTHONPATH
+ENV PYTHONUNBUFFERED=1
+
+# ============================================================================
 # EXPOSE PORTS
 # ============================================================================
 # Render assigns a port dynamically via $PORT environment variable
