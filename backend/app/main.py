@@ -398,16 +398,6 @@ async def search_documents(request: SearchRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Mount Static Files
-# Serve React frontend - this should be last so API routes take precedence
-frontend_path = Path(__file__).parent.parent.parent / "frontend"
-if frontend_path.exists():
-    app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="static")
-    logger.info(f"Static files mounted from {frontend_path}")
-else:
-    logger.warning(f"Frontend directory not found at {frontend_path}")
-
-
 # ==================== Health & Info Endpoints ====================
 
 @app.get("/health")
@@ -446,3 +436,13 @@ async def get_stats():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================== Mount Static Files LAST ====================
+# Mount React frontend - MUST be last so API routes are not shadowed
+frontend_path = Path(__file__).parent.parent.parent / "frontend"
+if frontend_path.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="static")
+    logger.info(f"✅ Static files mounted from {frontend_path}")
+else:
+    logger.warning(f"⚠️  Frontend directory not found at {frontend_path}")
