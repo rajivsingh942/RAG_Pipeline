@@ -3,9 +3,11 @@ Main FastAPI Application
 """
 import logging
 import uuid
+from pathlib import Path
 from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
 import asyncio
 
 from .config import get_settings
@@ -363,6 +365,17 @@ async def search_documents(request: SearchRequest):
     
     except Exception as e:
         logger.error(f"Error searching: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Mount Static Files
+# Serve React frontend - this should be last so API routes take precedence
+frontend_path = Path(__file__).parent.parent.parent / "frontend"
+if frontend_path.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="static")
+    logger.info(f"Static files mounted from {frontend_path}")
+else:
+    logger.warning(f"Frontend directory not found at {frontend_path}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

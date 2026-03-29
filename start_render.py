@@ -18,7 +18,7 @@ FRONTEND_PORT = int(os.getenv('FRONTEND_PORT', '3000'))
 # For Render, use the same port for both services
 IS_RENDER = 'RENDER' in os.environ
 if IS_RENDER:
-    FRONTEND_PORT = PORT  # Use same port as API
+    FRONTEND_PORT = PORT  # Use same port as API since they'll be served together
 
 print("\n" + "="*70)
 print("Smart RAG - Application Startup")
@@ -90,19 +90,14 @@ time.sleep(3)
 # Start frontend
 print(f"\n🚀 Starting Frontend Server...")
 if IS_RENDER:
-    # On Render, serve static files directly without opening browser
-    frontend_cmd = [sys.executable, 'frontend_server.py']
-    frontend_process = subprocess.Popen(
-        frontend_cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
+    # On Render, frontend is served by FastAPI (no separate process needed)
+    print(f"✅ Frontend will be served by FastAPI on port {PORT}")
 else:
+    # On local, start separate frontend server
     frontend_cmd = [sys.executable, 'frontend_server.py']
     frontend_process = subprocess.Popen(frontend_cmd)
-
-processes.append(frontend_process)
-print(f"✅ Frontend started")
+    processes.append(frontend_process)
+    print(f"✅ Frontend started")
 
 # Display service URLs
 print("\n" + "="*70)
