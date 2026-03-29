@@ -12,9 +12,6 @@ import asyncio
 
 from .config import get_settings
 from .db import database, get_db, DataSource, Conversation, Message, IndexSession
-from .connectors import get_connector, FolderConnector
-from .llms import get_llm
-from .rag import RAGPipeline, VectorStore
 from .schemas import (
     DataSourceConfig, DataSourceResponse, QueryRequest, QueryResponse,
     ConversationCreate, ConversationResponse, ConversationWithMessages,
@@ -44,10 +41,50 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global instances
+# Global instances (initialized lazily)
 rag_pipeline = None
 vector_store = None
 active_llm = None
+
+
+def _get_rag_pipeline():
+    """Lazily initialize RAG pipeline on first use"""
+    global rag_pipeline, vector_store, active_llm
+    
+    if rag_pipeline is not None:
+        return rag_pipeline
+    
+    try:
+        from .llms import get_llm  # Lazy import
+        from .rag import RAGPipeline, VectorStore  # Lazy import
+        
+        # Initialize vector store
+        vector_store = VectorStore(settings.VECTOR_STORE_PATH)
+        logger.info("✅ Vector store initialized")
+        
+        # Initialize LLM
+        api_key = getattr(settings, f"{settings.DEFAULT_LLM.upper()}_API_KEY", "")
+        if not api_key or api_key == "":
+            logger.error(f"❌ No API key for {settings.DEFAULT_LLM}")
+            raise ValueError(f"API key not configured for {settings.DEFAULT_LLM}")
+        
+        active_llm = get_llm(
+            settings.DEFAULT_LLM,
+            api_key,
+            getattr(settings, f"{settings.DEFAULT_LLM.upper()}_MODEL"),
+        )
+        logger.info(f"✅ LLM initialized: {settings.DEFAULT_LLM}")
+        
+        # Initialize RAG pipeline
+        rag_pipeline = RAGPipeline(active_llm, vector_store)
+        logger.info("✅ RAG pipeline initialized")
+        
+        return rag_pipeline
+    
+    except Exception as e:
+        logger.error(f"Failed to initialize RAG pipeline: {e}")
+        raise
+
 
 # Health check endpoint
 @app.get("/health")
@@ -65,8 +102,6 @@ async def health_check():
 async def startup_event():
     """Startup event - minimal initialization"""
     logger.info("✅ Application starting - heavy components will load on first use")
-    # Note: Don't initialize heavy components here (sentence-transformers, etc.)
-    # They will be loaded lazily when first needed
 
 
 # ==================== Data Source Endpoints ====================
@@ -75,6 +110,8 @@ async def startup_event():
 async def add_data_source(source_config: DataSourceConfig, db=Depends(get_db)):
     """Add a new data source"""
     try:
+        from .connectors import get_connector  # Lazy import
+        
         source_id = str(uuid.uuid4())
         
         # Validate connection
@@ -176,6 +213,8 @@ async def start_indexing(request: IndexRequest, background_tasks: BackgroundTask
 async def _index_data_source(source_id: str, session_id: str, db):
     """Background task to index data source"""
     try:
+        from .connectors import get_connector  # Lazy import
+        
         source = db.query(DataSource).filter(DataSource.id == source_id).first()
         session = db.query(IndexSession).filter(IndexSession.id == session_id).first()
         
@@ -190,8 +229,11 @@ async def _index_data_source(source_id: str, session_id: str, db):
         documents = await connector.load_documents()
         session.documents_processed = len(documents)
         
+        # Get RAG pipeline (lazy initialize)
+        pipeline = _get_rag_pipeline()
+        
         # Index documents
-        chunks_created = await rag_pipeline.index_documents(documents)
+        chunks_created = await pipeline.index_documents(documents)
         session.chunks_created = chunks_created
         
         # Update source
@@ -294,8 +336,11 @@ async def query(request: QueryRequest, db=Depends(get_db)):
             sources = []
             
             try:
+                # Get RAG pipeline (lazy initialize)
+                pipeline = _get_rag_pipeline()
+                
                 # Get context through RAG
-                context = await rag_pipeline.retrieve_context(request.message)
+                context = await pipeline.retrieve_context(request.message)
                 sources = [
                     {
                         "text": text[:200],
@@ -306,7 +351,7 @@ async def query(request: QueryRequest, db=Depends(get_db)):
                 ]
                 
                 # Generate answer with streaming
-                async for chunk in rag_pipeline.answer_question(
+                async for chunk in pipeline.answer_question(
                     request.message,
                     history_list,
                     use_stream=True,
@@ -341,7 +386,8 @@ async def query(request: QueryRequest, db=Depends(get_db)):
 async def search_documents(request: SearchRequest):
     """Search documents without generating answer"""
     try:
-        context = await rag_pipeline.retrieve_context(request.query, request.top_k)
+        pipeline = _get_rag_pipeline()
+        context = await pipeline.retrieve_context(request.query, request.top_k)
         
         results = [
             SearchResult(
