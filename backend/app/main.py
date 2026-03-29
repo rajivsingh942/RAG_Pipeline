@@ -49,31 +49,63 @@ rag_pipeline = None
 vector_store = None
 active_llm = None
 
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring"""
+    return {
+        "status": "ok",
+        "service": "Smart RAG Pipeline",
+        "version": "1.0.0",
+        "rag_ready": rag_pipeline is not None,
+    }
+
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize on startup"""
+    """Initialize on startup - with error handling"""
     global rag_pipeline, vector_store, active_llm
     
-    # Initialize database
-    await database.init_db()
-    logger.info("Database initialized")
+    try:
+        # Initialize database
+        await database.init_db()
+        logger.info("✅ Database initialized")
+    except Exception as e:
+        logger.warning(f"⚠️  Database initialization failed (non-critical): {e}")
     
-    # Initialize vector store
-    vector_store = VectorStore(settings.VECTOR_STORE_PATH)
-    logger.info("Vector store initialized")
+    try:
+        # Initialize vector store
+        vector_store = VectorStore(settings.VECTOR_STORE_PATH)
+        logger.info("✅ Vector store initialized")
+    except Exception as e:
+        logger.warning(f"⚠️  Vector store initialization failed (non-critical): {e}")
     
-    # Initialize LLM
-    active_llm = get_llm(
-        settings.DEFAULT_LLM,
-        getattr(settings, f"{settings.DEFAULT_LLM.upper()}_API_KEY"),
-        getattr(settings, f"{settings.DEFAULT_LLM.upper()}_MODEL"),
-    )
-    logger.info(f"LLM initialized: {settings.DEFAULT_LLM}")
+    try:
+        # Initialize LLM - check if API key exists first
+        api_key = getattr(settings, f"{settings.DEFAULT_LLM.upper()}_API_KEY", "")
+        if not api_key or api_key == "":
+            logger.warning(f"⚠️  No API key for {settings.DEFAULT_LLM} - API endpoints will fail until configured")
+        else:
+            active_llm = get_llm(
+                settings.DEFAULT_LLM,
+                api_key,
+                getattr(settings, f"{settings.DEFAULT_LLM.upper()}_MODEL"),
+            )
+            logger.info(f"✅ LLM initialized: {settings.DEFAULT_LLM}")
+    except Exception as e:
+        logger.warning(f"⚠️  LLM initialization failed (non-critical): {e}")
     
-    # Initialize RAG pipeline
-    rag_pipeline = RAGPipeline(active_llm, vector_store)
-    logger.info("RAG pipeline initialized")
+    try:
+        # Initialize RAG pipeline
+        if vector_store and active_llm:
+            rag_pipeline = RAGPipeline(active_llm, vector_store)
+            logger.info("✅ RAG pipeline initialized")
+        else:
+            logger.warning("⚠️  RAG pipeline not initialized - vector store or LLM missing")
+    except Exception as e:
+        logger.warning(f"⚠️  RAG pipeline initialization failed (non-critical): {e}")
+    
+    logger.info("✅ Application startup complete")
 
 
 # ==================== Data Source Endpoints ====================

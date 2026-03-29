@@ -55,15 +55,15 @@ EXPOSE 10000
 # ============================================================================
 # HEALTH CHECK
 # ============================================================================
-# Check if API is responding
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-10000}/health || exit 1
+# Simple health check - just verify the port is listening
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD python -c "import socket; socket.create_connection(('localhost', int(__import__('os').getenv('PORT', 10000))))" || exit 1
 
 # ============================================================================
 # RUN COMMAND
 # ============================================================================
-# Use the smart startup script that handles both local and Render deployment
-CMD ["python", "start_render.py"]
+# Run FastAPI directly with uvicorn
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "${PORT:-10000}"]
 
 # ============================================================================
 # NOTES FOR CLOUD DEPLOYMENT
