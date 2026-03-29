@@ -24,14 +24,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # ============================================================================
 # COPY PROJECT FILES
 # ============================================================================
-# Copy only necessary files (not venv, data, __pycache__, etc.)
+# Copy only necessary files for production
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
-COPY .env.example ./.env
 COPY requirements.txt ./
 COPY app_runner.py ./
-COPY frontend_server.py ./
-COPY start_render.py ./
+COPY .env.example ./.env
 COPY README.md ./
 
 # ============================================================================
@@ -49,23 +47,22 @@ RUN mkdir -p backend/data
 # ============================================================================
 # SET PYTHON PATH AND ENVIRONMENT
 # ============================================================================
-# Add backend to Python path so 'app' module can be found
-ENV PYTHONPATH=/app/backend:$PYTHONPATH
+# Configure Python path and environment for production
+ENV PYTHONPATH=/app:/app/backend:$PYTHONPATH
 ENV PYTHONUNBUFFERED=1
+ENV PORT=10000
 
 # ============================================================================
 # EXPOSE PORTS
 # ============================================================================
-# Render assigns a port dynamically via $PORT environment variable
-# We use 10000 as a fallback/default
 EXPOSE 10000
 
 # ============================================================================
 # HEALTH CHECK
 # ============================================================================
-# Simple health check - just verify the port is listening
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD python -c "import socket; socket.create_connection(('localhost', int(__import__('os').getenv('PORT', 10000))))" || exit 1
+# Health check endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=45s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-10000}/health || exit 1
 
 # ============================================================================
 # RUN COMMAND

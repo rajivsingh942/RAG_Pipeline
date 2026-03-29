@@ -15,58 +15,46 @@
 
 services:
   - type: web
-    name: smart-rag-app
+    name: rag-pipeline-7
     env: docker
     plan: standard
-    region: oregon  # Change to preferred region (oregon, frankfurt, singapore, etc.)
+    region: oregon
     
-    # GitHub repo details (Render auto-fills these)
-    repo: YOUR_GITHUB_REPO_URL
+    # GitHub repo details
+    repo: https://github.com/rajivsingh942/RAG_Pipeline
     branch: main
     
-    # Dockerfile location (default is ./Dockerfile)
+    # Dockerfile location
     dockerfilePath: ./Dockerfile
     
-    # Build command (if needed)
-    # buildCommand: "echo 'Docker build is standard'"
-    
-    # Note: startCommand is NOT needed - Dockerfile CMD will be used
-    # The Dockerfile runs: python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
-    
-    # Environment variables - FILL THESE IN:
+    # Environment variables - FILL IN YOUR API KEYS
     envVars:
       - key: PORT
-        value: "10000"  # Render will override this with its assigned port
+        value: "10000"
       - key: API_HOST
         value: 0.0.0.0
       - key: ENVIRONMENT
         value: production
-      - key: LLM_PROVIDER
-        value: openai  # or gemini, openrouter
-      - key: LLM_MODEL
+      - key: DEFAULT_LLM
+        value: openai
+      - key: OPENAI_MODEL
         value: gpt-4o-mini
       - key: OPENAI_API_KEY
-        sync: false  # Set to true if you have it in Render secrets
-      - key: GOOGLE_API_KEY
-        sync: false
-      - key: OPENROUTER_API_KEY
-        sync: false
+        sync: false  # Add your key in Render dashboard under Environment
       - key: DATABASE_PATH
         value: /tmp/rag_pipeline.db
       - key: VECTOR_STORE_PATH
         value: /tmp/faiss_index
+      - key: PYTHONUNBUFFERED
+        value: "1"
     
-    # Health check
+    # Health check configuration
     healthCheckPath: /health
     healthCheckInterval: 30
     healthCheckTimeout: 10
     
     # Auto-deploy on push
     autoDeploy: true
-    
-    # Scaling
-    numInstances: 1
-    maxInstances: 3
 
 # ============================================================================
 # DATABASE SERVICE (Optional - if you want PostgreSQL instead of SQLite)
