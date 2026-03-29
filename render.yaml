@@ -31,7 +31,7 @@ services:
     # buildCommand: "echo 'Docker build is standard'"
     
     # Port configuration
-    startCommand: sh -c "python backend/run.py & python frontend_server.py"
+    startCommand: python start_render.py
     
     # Environment variables - FILL THESE IN:
     envVars:

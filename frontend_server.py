@@ -1,6 +1,6 @@
 """
 Simple Local Web Server for Smart RAG App
-Serves the frontend on http://localhost:3000
+Serves the frontend on http://localhost:3000 (or custom PORT)
 """
 
 import http.server
@@ -10,7 +10,9 @@ import webbrowser
 import time
 from pathlib import Path
 
-PORT = 3000
+# Get port from environment or use default
+PORT = int(os.getenv("PORT", 3000))
+IS_RENDER = "RENDER" in os.environ
 FRONTEND_DIR = Path(__file__).parent / "frontend"
 
 
@@ -53,9 +55,11 @@ def start_server():
     try:
         with socketserver.TCPServer(("", PORT), MyHTTPRequestHandler) as httpd:
             print(f"✅ Server running on http://localhost:{PORT}")
-            print(f"\n🌐 Opening in browser...")
-            time.sleep(1)
-            webbrowser.open(f"http://localhost:{PORT}")
+            
+            if not IS_RENDER:
+                print(f"\n🌐 Opening in browser...")
+                time.sleep(1)
+                webbrowser.open(f"http://localhost:{PORT}")
             
             print(f"\n📌 Press Ctrl+C to stop the server\n")
             httpd.serve_forever()
