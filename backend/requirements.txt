@@ -10,7 +10,7 @@ langchain==0.1.0
 langchain-openai==0.0.5
 langchain-community==0.0.9
 langchain-text-splitters==0.0.1
-langsmith==0.1.52
+langsmith==0.0.92
 faiss-cpu==1.13.2
 sentence-transformers==2.2.2
 pymupdf==1.27.2
