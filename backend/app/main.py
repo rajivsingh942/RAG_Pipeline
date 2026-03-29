@@ -376,7 +376,6 @@ if frontend_path.exists():
     logger.info(f"Static files mounted from {frontend_path}")
 else:
     logger.warning(f"Frontend directory not found at {frontend_path}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ==================== Health & Info Endpoints ====================
