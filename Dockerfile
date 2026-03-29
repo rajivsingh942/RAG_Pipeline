@@ -62,8 +62,8 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
 # ============================================================================
 # RUN COMMAND
 # ============================================================================
-# Run FastAPI directly with uvicorn
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "${PORT:-10000}"]
+# Run FastAPI directly with uvicorn - use shell form for environment variable expansion
+CMD sh -c "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}"
 
 # ============================================================================
 # NOTES FOR CLOUD DEPLOYMENT
